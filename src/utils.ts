@@ -38,8 +38,6 @@ export function createKey() {
 
 export const readOnly: <T extends unknown>(obj: T) => T = (obj) => obj
 
-export const noop = () => {}
-
 export const createHref = (to: To) => {
   return typeof to === 'string' ? to : createPath(to)
 }
