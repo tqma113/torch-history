@@ -74,9 +74,9 @@ export default function createMemoryHistory({
     action: Action,
     location: Location,
     retry: Retry,
-    silence: boolean
+    silent: boolean
   ): boolean => {
-    if (!silence && blockers.length !== 0) {
+    if (!silent && blockers.length !== 0) {
       blockers.call({ action, location, retry })
       return false
     }
@@ -88,11 +88,11 @@ export default function createMemoryHistory({
   const transit = (
     nextAction: Action,
     nextLocation: Location,
-    silence: boolean
+    silent: boolean
   ) => {
     action = nextAction
     location = nextLocation
-    if (!silence) {
+    if (!silent) {
       listeners.call({ action, location })
     }
   }
@@ -101,11 +101,11 @@ export default function createMemoryHistory({
     return typeof to === 'string' ? to : createPath(to)
   }
 
-  const _push = (to: To, state: State = null, silence: boolean = false) => {
+  const _push = (to: To, state: State = null, silent: boolean = false) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _push(to, state, silence)
+      _push(to, state, silent)
     }
 
     warning(
@@ -115,18 +115,18 @@ export default function createMemoryHistory({
       )})`
     )
 
-    if (allowTransit(nextAction, nextLocation, retry, silence)) {
+    if (allowTransit(nextAction, nextLocation, retry, silent)) {
       index += 1
       entries.splice(index, entries.length, nextLocation)
-      transit(nextAction, nextLocation, silence)
+      transit(nextAction, nextLocation, silent)
     }
   }
 
-  const _replace = (to: To, state: State = null, silence: boolean = false) => {
+  const _replace = (to: To, state: State = null, silent: boolean = false) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _replace(to, state, silence)
+      _replace(to, state, silent)
     }
 
     warning(
@@ -136,9 +136,9 @@ export default function createMemoryHistory({
       )})`
     )
 
-    if (allowTransit(nextAction, nextLocation, retry, silence)) {
+    if (allowTransit(nextAction, nextLocation, retry, silent)) {
       entries[index] = nextLocation
-      transit(nextAction, nextLocation, silence)
+      transit(nextAction, nextLocation, silent)
     }
   }
 
@@ -189,7 +189,7 @@ export default function createMemoryHistory({
     block: (blocker: Blocker<State>) => {
       return blockers.push(blocker)
     },
-    silence: {
+    silent: {
       push: (to: To, state: State) => {
         _push(to, state, true)
       },

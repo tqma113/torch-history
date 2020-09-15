@@ -44,13 +44,13 @@ export default function createBrowserHistory({
     const state = globalHistory.state || {}
 
     return [
-      state.idx || null,
+      state.idx,
       readOnly({
         pathname,
         hash,
         search,
-        key: state.usr || null,
-        state: state.key || 'default',
+        key: state.key || 'default',
+        state: state.usr || null,
       }),
     ]
   }
@@ -141,9 +141,9 @@ export default function createBrowserHistory({
     action: Action,
     location: Location,
     retry: Retry,
-    silence: boolean
+    silent: boolean
   ): boolean => {
-    if (!silence && blockers.length !== 0) {
+    if (!silent && blockers.length !== 0) {
       blockers.call({ action, location, retry })
       return false
     }
@@ -151,10 +151,10 @@ export default function createBrowserHistory({
   }
 
   const listeners = createEvents<Update>()
-  const transit = (nextAction: Action, silence: boolean) => {
+  const transit = (nextAction: Action, silent: boolean) => {
     action = nextAction
     ;[index, location] = getIndexAndLocation()
-    if (!silence) {
+    if (!silent) {
       listeners.call({ action, location })
     }
   }
@@ -162,16 +162,16 @@ export default function createBrowserHistory({
   const _push = (
     to: To,
     state: State,
-    silence: boolean,
+    silent: boolean,
     forceRefresh: boolean
   ) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _push(to, state, silence, forceRefresh)
+      _push(to, state, silent, forceRefresh)
     }
 
-    if (allowTransit(nextAction, nextLocation, retry, silence)) {
+    if (allowTransit(nextAction, nextLocation, retry, silent)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index + 1)
 
       if (forceRefresh) {
@@ -187,23 +187,23 @@ export default function createBrowserHistory({
         }
       }
 
-      transit(nextAction, silence)
+      transit(nextAction, silent)
     }
   }
 
   const _replace = (
     to: To,
     state: State,
-    silence: boolean,
+    silent: boolean,
     forceRefresh: boolean
   ) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _replace(to, state, silence, forceRefresh)
+      _replace(to, state, silent, forceRefresh)
     }
 
-    if (allowTransit(nextAction, nextLocation, retry, silence)) {
+    if (allowTransit(nextAction, nextLocation, retry, silent)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
       if (forceRefresh) {
@@ -212,7 +212,7 @@ export default function createBrowserHistory({
         globalHistory.replaceState(historyState, '', url)
       }
 
-      transit(nextAction, silence)
+      transit(nextAction, silent)
     }
   }
 
@@ -270,7 +270,7 @@ export default function createBrowserHistory({
         _replace(to, state, false, true)
       },
     },
-    silence: {
+    silent: {
       push: (to: To, state: State) => {
         _push(to, state, true, false)
       },

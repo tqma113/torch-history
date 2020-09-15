@@ -89,7 +89,7 @@ export interface History<S extends State = State> {
   forward(): void
   listen(listener: Listener<S>): Undo
   block(blocker: Blocker<S>): Undo
-  silence: {
+  silent: {
     push(to: To, state?: State): void
     replace(to: To, state?: State): void
   }
