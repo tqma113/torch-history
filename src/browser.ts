@@ -3,7 +3,7 @@ import { Action } from './index'
 import { createEvents } from './events'
 import {
   createKey,
-  createHref,
+  createPath,
   parsePath,
   readOnly,
   promptBeforeUnload,
@@ -41,10 +41,10 @@ export default function createBrowserHistory({
 
   const getIndexAndLocation = (): [number, Location] => {
     const { pathname, search, hash } = window.location
-    const state = globalHistory.state
+    const state = globalHistory.state || {}
 
     return [
-      state.idx,
+      state.idx || null,
       readOnly({
         pathname,
         hash,
@@ -53,6 +53,10 @@ export default function createBrowserHistory({
         state: state.key || 'default',
       }),
     ]
+  }
+
+  const createHref = (to: To) => {
+    return typeof to === 'string' ? to : createPath(to)
   }
 
   const getHistoryStateAndUrl = (

@@ -1,7 +1,7 @@
 import warning from 'tiny-warning'
 import { Action } from './index'
 import { createEvents } from './events'
-import { createKey, createHref, parsePath, readOnly, clamp } from './utils'
+import { createKey, createPath, parsePath, readOnly, clamp } from './utils'
 import type {
   To,
   State,
@@ -30,7 +30,7 @@ export interface MemoryHistory<S extends State = State> extends History<S> {
 export default function createMemoryHistory({
   initialEntries = ['/'],
   initialIndex,
-}: MemoryHistoryOptions): MemoryHistory {
+}: MemoryHistoryOptions = {}): MemoryHistory {
   let entries: Location[] = initialEntries.map((entry) => {
     let location = readOnly<Location>({
       pathname: '/',
@@ -95,6 +95,10 @@ export default function createMemoryHistory({
     if (!silence) {
       listeners.call({ action, location })
     }
+  }
+
+  const createHref = (to: To) => {
+    return typeof to === 'string' ? to : createPath(to)
   }
 
   const _push = (to: To, state: State = null, silence: boolean = false) => {

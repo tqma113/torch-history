@@ -1,4 +1,4 @@
-import type { To, PartialPath } from './index'
+import type { PartialPath } from './index'
 
 export function parsePath(path: string): PartialPath {
   let partialPath: PartialPath = {}
@@ -37,10 +37,6 @@ export function createKey() {
 }
 
 export const readOnly: <T extends unknown>(obj: T) => T = (obj) => obj
-
-export const createHref = (to: To) => {
-  return typeof to === 'string' ? to : createPath(to)
-}
 
 export const clamp = (n: number, lowerBound: number, upperBound: number) =>
   Math.min(Math.max(n, lowerBound), upperBound)

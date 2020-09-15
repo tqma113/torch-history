@@ -3,7 +3,6 @@ import { Action } from './index'
 import { createEvents } from './events'
 import {
   createKey,
-  createHref,
   createPath,
   parsePath,
   readOnly,
@@ -56,6 +55,23 @@ export default function createHashHistory({
         key: state.key || 'default',
       }),
     ]
+  }
+
+  const getBaseHref = () => {
+    let base = document.querySelector('base')
+    let href = ''
+
+    if (base && base.getAttribute('href')) {
+      let url = window.location.href
+      let hashIndex = url.indexOf('#')
+      href = hashIndex === -1 ? url : url.slice(0, hashIndex)
+    }
+
+    return href
+  }
+
+  const createHref = (to: To) => {
+    return getBaseHref() + '#' + (typeof to === 'string' ? to : createPath(to))
   }
 
   const getHistoryStateAndUrl = (

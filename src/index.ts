@@ -20,6 +20,8 @@ export enum Action {
 // TYPES
 ////////////////////////////////////////////////////////////////////////////////
 export type { BrowserHistory, BrowserHistoryOptions } from './browser'
+export type { HashHistory, HashHistoryOptions } from './hash'
+export type { MemoryHistory, MemoryHistoryOptions } from './memory'
 
 export type Pathname = string
 
