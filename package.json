@@ -1,6 +1,6 @@
 {
   "name": "torch-history",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A history manager for myself.",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
