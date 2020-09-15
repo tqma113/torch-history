@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "outDir": "lib",
     "declaration": true,
     "sourceMap": false,
@@ -24,10 +24,9 @@
       "jest",
       "node"
     ],
-    "rootDir": "."
+    "rootDir": "./src"
   },
   "include": [
-    "src",
-    "__tests__"
+    "src"
   ]
 }
