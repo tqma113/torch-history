@@ -25,7 +25,12 @@ import type {
 
 export type HashHistoryOptions = { window?: Window }
 
-export interface HashHistory<S extends State = State> extends History<S> {}
+export interface HashHistory<S extends State = State> extends History<S> {
+  forceRefresh: {
+    push(to: To, state?: State): void
+    replace(to: To, state?: State): void
+  }
+}
 
 const BeforeUnloadEventType = 'beforeunload'
 const PopStateEventType = 'popstate'
@@ -166,11 +171,16 @@ export default function createHashHistory({
     }
   }
 
-  const push = (to: To, state: State = null, silence: boolean = false) => {
+  const _push = (
+    to: To,
+    state: State,
+    silence: boolean,
+    forceRefresh: boolean
+  ) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      push(to, state, silence)
+      _push(to, state, silence, forceRefresh)
     }
 
     warning(
@@ -183,24 +193,33 @@ export default function createHashHistory({
     if (allowTransit(nextAction, nextLocation, retry, silence)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index + 1)
 
-      // try...catch because iOS limits us to 100 pushState calls :/
-      try {
-        globalHistory.pushState(historyState, '', url)
-      } catch (error) {
-        // They are going to lose state here, but there is no real
-        // way to warn them about it since the page will refresh...
+      if (forceRefresh) {
         window.location.assign(url)
+      } else {
+        // try...catch because iOS limits us to 100 pushState calls :/
+        try {
+          globalHistory.pushState(historyState, '', url)
+        } catch (error) {
+          // They are going to lose state here, but there is no real
+          // way to warn them about it since the page will refresh...
+          window.location.assign(url)
+        }
       }
 
       transit(nextAction, silence)
     }
   }
 
-  const replace = (to: To, state: State = null, silence: boolean = false) => {
+  const _replace = (
+    to: To,
+    state: State,
+    silence: boolean,
+    forceRefresh: boolean
+  ) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      replace(to, state, silence)
+      _replace(to, state, silence, forceRefresh)
     }
 
     warning(
@@ -211,9 +230,13 @@ export default function createHashHistory({
     )
 
     if (allowTransit(nextAction, nextLocation, retry, silence)) {
-      let [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
+      const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
-      globalHistory.replaceState(historyState, '', url)
+      if (forceRefresh) {
+        window.location.assign(url)
+      } else {
+        globalHistory.replaceState(historyState, '', url)
+      }
 
       transit(nextAction, silence)
     }
@@ -262,12 +285,32 @@ export default function createHashHistory({
       return location
     },
     createHref,
-    push,
-    replace,
+    push: (to: To, state: State) => {
+      _push(to, state, false, false)
+    },
+    replace: (to: To, state: State) => {
+      _replace(to, state, false, false)
+    },
     go,
     back,
     forward,
     listen,
     block,
+    forceRefresh: {
+      push: (to: To, state: State) => {
+        _push(to, state, false, true)
+      },
+      replace: (to: To, state: State) => {
+        _replace(to, state, false, true)
+      },
+    },
+    silence: {
+      push: (to: To, state: State) => {
+        _push(to, state, true, false)
+      },
+      replace: (to: To, state: State) => {
+        _replace(to, state, true, false)
+      },
+    },
   }
 }

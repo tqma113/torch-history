@@ -80,11 +80,15 @@ export interface History<S extends State = State> {
   action: Action
   location: Location<S>
   createHref(to: To): string
-  push(to: To, state?: State, silence?: boolean): void
-  replace(to: To, state?: State, silence?: boolean): void
+  push(to: To, state?: State): void
+  replace(to: To, state?: State): void
   go(delta: number): void
   back(): void
   forward(): void
   listen(listener: Listener<S>): Undo
   block(blocker: Blocker<S>): Undo
+  silence: {
+    push(to: To, state?: State): void
+    replace(to: To, state?: State): void
+  }
 }

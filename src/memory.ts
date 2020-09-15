@@ -85,7 +85,11 @@ export default function createMemoryHistory({
 
   const listeners = createEvents<Update>()
 
-  const transit = (nextAction: Action, nextLocation: Location, silence: boolean) => {
+  const transit = (
+    nextAction: Action,
+    nextLocation: Location,
+    silence: boolean
+  ) => {
     action = nextAction
     location = nextLocation
     if (!silence) {
@@ -93,11 +97,11 @@ export default function createMemoryHistory({
     }
   }
 
-  const push = (to: To, state: State = null, silence: boolean = false) => {
+  const _push = (to: To, state: State = null, silence: boolean = false) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      push(to, state, silence)
+      _push(to, state, silence)
     }
 
     warning(
@@ -114,11 +118,11 @@ export default function createMemoryHistory({
     }
   }
 
-  const replace = (to: To, state: State = null, silence: boolean = false) => {
+  const _replace = (to: To, state: State = null, silence: boolean = false) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      replace(to, state, silence)
+      _replace(to, state, silence)
     }
 
     warning(
@@ -148,22 +152,6 @@ export default function createMemoryHistory({
     }
   }
 
-  const back = () => {
-    go(-1)
-  }
-
-  const forward = () => {
-    go(1)
-  }
-
-  const listen = (listener: Listener<State>): Undo => {
-    return listeners.push(listener)
-  }
-
-  const block = (blocker: Blocker<State>) => {
-    return blockers.push(blocker)
-  }
-
   return {
     get index() {
       return index
@@ -178,12 +166,32 @@ export default function createMemoryHistory({
       return location
     },
     createHref,
-    push,
-    replace,
+    push: (to: To, state: State) => {
+      _push(to, state, false)
+    },
+    replace: (to: To, state: State) => {
+      _replace(to, state, false)
+    },
     go,
-    back,
-    forward,
-    listen,
-    block,
+    back: () => {
+      go(-1)
+    },
+    forward: () => {
+      go(1)
+    },
+    listen: (listener: Listener<State>): Undo => {
+      return listeners.push(listener)
+    },
+    block: (blocker: Blocker<State>) => {
+      return blockers.push(blocker)
+    },
+    silence: {
+      push: (to: To, state: State) => {
+        _push(to, state, true)
+      },
+      replace: (to: To, state: State) => {
+        _replace(to, state, true)
+      },
+    },
   }
 }

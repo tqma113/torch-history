@@ -24,7 +24,12 @@ import type {
 
 export type BrowserHistoryOptions = { window?: Window }
 
-export interface BrowserHistory<S extends State = State> extends History<S> {}
+export interface BrowserHistory<S extends State = State> extends History<S> {
+  forceRefresh: {
+    push(to: To, state?: State): void
+    replace(to: To, state?: State): void
+  }
+}
 
 const BeforeUnloadEventType = 'beforeunload'
 const PopStateEventType = 'popstate'
@@ -128,7 +133,6 @@ export default function createBrowserHistory({
   }
 
   const blockers = createEvents<Transaction>()
-
   const allowTransit = (
     action: Action,
     location: Location,
@@ -143,7 +147,6 @@ export default function createBrowserHistory({
   }
 
   const listeners = createEvents<Update>()
-
   const transit = (nextAction: Action, silence: boolean) => {
     action = nextAction
     ;[index, location] = getIndexAndLocation()
@@ -152,40 +155,58 @@ export default function createBrowserHistory({
     }
   }
 
-  const push = (to: To, state: State = null, silence: boolean = false) => {
+  const _push = (
+    to: To,
+    state: State,
+    silence: boolean,
+    forceRefresh: boolean
+  ) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      push(to, state, silence)
+      _push(to, state, silence, forceRefresh)
     }
 
     if (allowTransit(nextAction, nextLocation, retry, silence)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index + 1)
 
-      // try...catch because iOS limits us to 100 pushState calls :/
-      try {
-        globalHistory.pushState(historyState, '', url)
-      } catch (error) {
-        // They are going to lose state here, but there is no real
-        // way to warn them about it since the page will refresh...
+      if (forceRefresh) {
         window.location.assign(url)
+      } else {
+        // try...catch because iOS limits us to 100 pushState calls :/
+        try {
+          globalHistory.pushState(historyState, '', url)
+        } catch (error) {
+          // They are going to lose state here, but there is no real
+          // way to warn them about it since the page will refresh...
+          window.location.assign(url)
+        }
       }
 
       transit(nextAction, silence)
     }
   }
 
-  const replace = (to: To, state: State = null, silence: boolean = false) => {
+  const _replace = (
+    to: To,
+    state: State,
+    silence: boolean,
+    forceRefresh: boolean
+  ) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      replace(to, state, silence)
+      _replace(to, state, silence, forceRefresh)
     }
 
     if (allowTransit(nextAction, nextLocation, retry, silence)) {
-      let [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
+      const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
-      globalHistory.replaceState(historyState, '', url)
+      if (forceRefresh) {
+        window.location.assign(url)
+      } else {
+        globalHistory.replaceState(historyState, '', url)
+      }
 
       transit(nextAction, silence)
     }
@@ -193,34 +214,6 @@ export default function createBrowserHistory({
 
   const go = (delta: number) => {
     globalHistory.go(delta)
-  }
-
-  const back = () => {
-    go(-1)
-  }
-
-  const forward = () => {
-    go(1)
-  }
-
-  const listen = (listener: Listener<State>): Undo => {
-    return listeners.push(listener)
-  }
-
-  const block = (blocker: Blocker<State>) => {
-    const unblock = blockers.push(blocker)
-
-    if (blockers.length === 1) {
-      window.addEventListener(BeforeUnloadEventType, promptBeforeUnload)
-    }
-
-    return () => {
-      unblock()
-
-      if (!blockers.length) {
-        window.removeEventListener(BeforeUnloadEventType, promptBeforeUnload)
-      }
-    }
   }
 
   return {
@@ -234,12 +227,52 @@ export default function createBrowserHistory({
       return location
     },
     createHref,
-    push,
-    replace,
+    push: (to: To, state: State) => {
+      _push(to, state, false, false)
+    },
+    replace: (to: To, state: State) => {
+      _replace(to, state, false, false)
+    },
     go,
-    back,
-    forward,
-    listen,
-    block,
+    back: () => {
+      go(-1)
+    },
+    forward: () => {
+      go(1)
+    },
+    listen: (listener: Listener<State>): Undo => {
+      return listeners.push(listener)
+    },
+    block: (blocker: Blocker<State>) => {
+      const unblock = blockers.push(blocker)
+
+      if (blockers.length === 1) {
+        window.addEventListener(BeforeUnloadEventType, promptBeforeUnload)
+      }
+
+      return () => {
+        unblock()
+
+        if (!blockers.length) {
+          window.removeEventListener(BeforeUnloadEventType, promptBeforeUnload)
+        }
+      }
+    },
+    forceRefresh: {
+      push: (to: To, state: State) => {
+        _push(to, state, false, true)
+      },
+      replace: (to: To, state: State) => {
+        _replace(to, state, false, true)
+      },
+    },
+    silence: {
+      push: (to: To, state: State) => {
+        _push(to, state, true, false)
+      },
+      replace: (to: To, state: State) => {
+        _replace(to, state, true, false)
+      },
+    },
   }
 }
