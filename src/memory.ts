@@ -101,11 +101,11 @@ export default function createMemoryHistory({
     return typeof to === 'string' ? to : createPath(to)
   }
 
-  const _push = (to: To, state: State = null, silent: boolean = false) => {
+  const push = (to: To, state: State = null, silent: boolean = false) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _push(to, state, silent)
+      push(to, state, silent)
     }
 
     warning(
@@ -122,11 +122,11 @@ export default function createMemoryHistory({
     }
   }
 
-  const _replace = (to: To, state: State = null, silent: boolean = false) => {
+  const replace = (to: To, state: State = null, silent: boolean = false) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _replace(to, state, silent)
+      replace(to, state, silent)
     }
 
     warning(
@@ -171,10 +171,10 @@ export default function createMemoryHistory({
     },
     createHref,
     push: (to: To, state: State) => {
-      _push(to, state, false)
+      push(to, state, false)
     },
     replace: (to: To, state: State) => {
-      _replace(to, state, false)
+      replace(to, state, false)
     },
     go,
     back: () => {
@@ -191,10 +191,10 @@ export default function createMemoryHistory({
     },
     silent: {
       push: (to: To, state: State) => {
-        _push(to, state, true)
+        push(to, state, true)
       },
       replace: (to: To, state: State) => {
-        _replace(to, state, true)
+        replace(to, state, true)
       },
     },
   }

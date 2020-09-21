@@ -187,7 +187,7 @@ export default function createHashHistory({
     }
   }
 
-  const _push = (
+  const push = (
     to: To,
     state: State,
     silent: boolean,
@@ -196,7 +196,7 @@ export default function createHashHistory({
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _push(to, state, silent, forceRefresh)
+      push(to, state, silent, forceRefresh)
     }
 
     warning(
@@ -226,7 +226,7 @@ export default function createHashHistory({
     }
   }
 
-  const _replace = (
+  const replace = (
     to: To,
     state: State,
     silent: boolean,
@@ -235,7 +235,7 @@ export default function createHashHistory({
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      _replace(to, state, silent, forceRefresh)
+      replace(to, state, silent, forceRefresh)
     }
 
     warning(
@@ -302,10 +302,10 @@ export default function createHashHistory({
     },
     createHref,
     push: (to: To, state: State) => {
-      _push(to, state, false, false)
+      push(to, state, false, false)
     },
     replace: (to: To, state: State) => {
-      _replace(to, state, false, false)
+      replace(to, state, false, false)
     },
     go,
     back,
@@ -314,18 +314,18 @@ export default function createHashHistory({
     block,
     forceRefresh: {
       push: (to: To, state: State) => {
-        _push(to, state, false, true)
+        push(to, state, false, true)
       },
       replace: (to: To, state: State) => {
-        _replace(to, state, false, true)
+        replace(to, state, false, true)
       },
     },
     silent: {
       push: (to: To, state: State) => {
-        _push(to, state, true, false)
+        push(to, state, true, false)
       },
       replace: (to: To, state: State) => {
-        _replace(to, state, true, false)
+        replace(to, state, true, false)
       },
     },
   }
