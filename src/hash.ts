@@ -249,7 +249,7 @@ export default function createHashHistory({
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
       if (forceRefresh) {
-        window.location.assign(url)
+        window.location.replace(url)
       } else {
         globalHistory.replaceState(historyState, '', url)
       }
