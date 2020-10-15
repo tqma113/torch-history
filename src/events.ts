@@ -1,8 +1,10 @@
+import type { Undo } from './index'
+
 type Handler<Arg> = (arg: Arg) => void
 
 type Events<Arg> = {
   length: number
-  push: (handler: Handler<Arg>) => () => void
+  push: (handler: Handler<Arg>) => Undo
   call: (arg: Arg) => void
 }
 
