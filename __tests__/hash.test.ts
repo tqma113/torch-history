@@ -16,10 +16,10 @@ import {
   BlockEverything,
   BlockPopWithoutListening,
 } from './helper'
-import type { HashHistory } from '../src'
+import type { History } from '../src'
 
 describe('a hash history on a page with a <base> tag', () => {
-  let history: HashHistory, base: HTMLBaseElement
+  let history: History, base: HTMLBaseElement
   beforeEach(() => {
     if (window.location.hash !== '#/') {
       window.location.hash = '/'
@@ -55,7 +55,7 @@ describe('a hash history on a page with a <base> tag', () => {
 })
 
 describe('a hash history', () => {
-  let history: HashHistory
+  let history: History
   beforeEach(() => {
     window.history.replaceState(null, '', '#/')
     history = createHashHistory()

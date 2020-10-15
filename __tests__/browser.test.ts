@@ -16,10 +16,10 @@ import {
   BlockEverything,
   BlockPopWithoutListening,
 } from './helper'
-import type { BrowserHistory } from '../src'
+import type { History } from '../src'
 
 describe('a browser history', () => {
-  let history: BrowserHistory
+  let history: History
   beforeEach(() => {
     window.history.replaceState(null, '', '/')
     history = createBrowserHistory()
