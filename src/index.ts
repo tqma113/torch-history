@@ -13,7 +13,11 @@ export enum Action {
 // TYPES
 export type { BrowserHistoryOptions } from './browser'
 export type { HashHistoryOptions } from './hash'
-export type { MemoryHistory, MemoryHistoryOptions, InitialEntry } from './memory'
+export type {
+  MemoryHistory,
+  MemoryHistoryOptions,
+  InitialEntry,
+} from './memory'
 
 export type Pathname = string
 

@@ -133,7 +133,7 @@ export default function createBrowserHistory({
   const allowTransit = (
     action: Action,
     location: Location,
-    retry: Retry,
+    retry: Retry
   ): boolean => {
     if (blockers.length !== 0) {
       blockers.call({ action, location, retry })
@@ -149,10 +149,7 @@ export default function createBrowserHistory({
     listeners.call({ action, location })
   }
 
-  const push = (
-    to: To,
-    state: State,
-  ) => {
+  const push = (to: To, state: State) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
@@ -175,10 +172,7 @@ export default function createBrowserHistory({
     }
   }
 
-  const replace = (
-    to: To,
-    state: State,
-  ) => {
+  const replace = (to: To, state: State) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
@@ -235,6 +229,6 @@ export default function createBrowserHistory({
           window.removeEventListener(BeforeUnloadEventType, promptBeforeUnload)
         }
       }
-    }
+    },
   })
 }
