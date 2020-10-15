@@ -24,20 +24,13 @@ import type {
 
 export type HashHistoryOptions = { window?: Window }
 
-export interface HashHistory<S extends State = State> extends History<S> {
-  forceRefresh: {
-    push(to: To, state?: State): void
-    replace(to: To, state?: State): void
-  }
-}
-
 const BeforeUnloadEventType = 'beforeunload'
 const PopStateEventType = 'popstate'
 const HashChangeEventType = 'hashchange'
 
 export default function createHashHistory({
   window = document.defaultView!,
-}: HashHistoryOptions = {}): HashHistory {
+}: HashHistoryOptions = {}): History {
   const globalHistory = window.history
 
   function getIndexAndLocation(): [number, Location] {
@@ -136,7 +129,7 @@ export default function createHashHistory({
           )
         }
       } else {
-        transit(nextAction, false)
+        transit(nextAction)
       }
     }
   }
@@ -168,9 +161,8 @@ export default function createHashHistory({
     action: Action,
     location: Location,
     retry: Retry,
-    silent: boolean
   ): boolean => {
-    if (!silent && blockers.length !== 0) {
+    if (blockers.length !== 0) {
       blockers.call({ action, location, retry })
       return false
     }
@@ -179,24 +171,20 @@ export default function createHashHistory({
 
   const listeners = createEvents<Update>()
 
-  const transit = (nextAction: Action, silent: boolean) => {
+  const transit = (nextAction: Action) => {
     action = nextAction
     ;[index, location] = getIndexAndLocation()
-    if (!silent) {
-      listeners.call({ action, location })
-    }
+    listeners.call({ action, location })
   }
 
   const push = (
     to: To,
     state: State,
-    silent: boolean,
-    forceRefresh: boolean
   ) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      push(to, state, silent, forceRefresh)
+      push(to, state)
     }
 
     warning(
@@ -206,36 +194,30 @@ export default function createHashHistory({
       )})`
     )
 
-    if (allowTransit(nextAction, nextLocation, retry, silent)) {
+    if (allowTransit(nextAction, nextLocation, retry)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index + 1)
 
-      if (forceRefresh) {
+      // try...catch because iOS limits us to 100 pushState calls :/
+      try {
+        globalHistory.pushState(historyState, '', url)
+      } catch (error) {
+        // They are going to lose state here, but there is no real
+        // way to warn them about it since the page will refresh...
         window.location.assign(url)
-      } else {
-        // try...catch because iOS limits us to 100 pushState calls :/
-        try {
-          globalHistory.pushState(historyState, '', url)
-        } catch (error) {
-          // They are going to lose state here, but there is no real
-          // way to warn them about it since the page will refresh...
-          window.location.assign(url)
-        }
       }
 
-      transit(nextAction, silent)
+      transit(nextAction)
     }
   }
 
   const replace = (
     to: To,
     state: State,
-    silent: boolean,
-    forceRefresh: boolean
   ) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      replace(to, state, silent, forceRefresh)
+      replace(to, state)
     }
 
     warning(
@@ -245,16 +227,12 @@ export default function createHashHistory({
       )})`
     )
 
-    if (allowTransit(nextAction, nextLocation, retry, silent)) {
+    if (allowTransit(nextAction, nextLocation, retry)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
-      if (forceRefresh) {
-        window.location.replace(url)
-      } else {
-        globalHistory.replaceState(historyState, '', url)
-      }
+      globalHistory.replaceState(historyState, '', url)
 
-      transit(nextAction, silent)
+      transit(nextAction)
     }
   }
 
@@ -290,7 +268,7 @@ export default function createHashHistory({
     }
   }
 
-  return {
+  return readOnly({
     get length() {
       return globalHistory.length
     },
@@ -301,32 +279,12 @@ export default function createHashHistory({
       return location
     },
     createHref,
-    push: (to: To, state: State) => {
-      push(to, state, false, false)
-    },
-    replace: (to: To, state: State) => {
-      replace(to, state, false, false)
-    },
+    push,
+    replace,
     go,
     back,
     forward,
     listen,
     block,
-    forceRefresh: {
-      push: (to: To, state: State) => {
-        push(to, state, false, true)
-      },
-      replace: (to: To, state: State) => {
-        replace(to, state, false, true)
-      },
-    },
-    silent: {
-      push: (to: To, state: State) => {
-        push(to, state, true, false)
-      },
-      replace: (to: To, state: State) => {
-        replace(to, state, true, false)
-      },
-    },
-  }
+  })
 }

@@ -24,19 +24,12 @@ import type {
 
 export type BrowserHistoryOptions = { window?: Window }
 
-export interface BrowserHistory<S extends State = State> extends History<S> {
-  forceRefresh: {
-    push(to: To, state?: State): void
-    replace(to: To, state?: State): void
-  }
-}
-
 const BeforeUnloadEventType = 'beforeunload'
 const PopStateEventType = 'popstate'
 
 export default function createBrowserHistory({
   window = document.defaultView!,
-}: BrowserHistoryOptions = {}): BrowserHistory {
+}: BrowserHistoryOptions = {}): History {
   const globalHistory = window.history
 
   const getIndexAndLocation = (): [number, Location] => {
@@ -121,7 +114,7 @@ export default function createBrowserHistory({
           )
         }
       } else {
-        transit(nextAction, false)
+        transit(nextAction)
       }
     }
   }
@@ -141,9 +134,8 @@ export default function createBrowserHistory({
     action: Action,
     location: Location,
     retry: Retry,
-    silent: boolean
   ): boolean => {
-    if (!silent && blockers.length !== 0) {
+    if (blockers.length !== 0) {
       blockers.call({ action, location, retry })
       return false
     }
@@ -151,68 +143,54 @@ export default function createBrowserHistory({
   }
 
   const listeners = createEvents<Update>()
-  const transit = (nextAction: Action, silent: boolean) => {
+  const transit = (nextAction: Action) => {
     action = nextAction
     ;[index, location] = getIndexAndLocation()
-    if (!silent) {
-      listeners.call({ action, location })
-    }
+    listeners.call({ action, location })
   }
 
   const push = (
     to: To,
     state: State,
-    silent: boolean,
-    forceRefresh: boolean
   ) => {
     const nextAction = Action.PUSH
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      push(to, state, silent, forceRefresh)
+      push(to, state)
     }
 
-    if (allowTransit(nextAction, nextLocation, retry, silent)) {
+    if (allowTransit(nextAction, nextLocation, retry)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index + 1)
 
-      if (forceRefresh) {
+      // try...catch because iOS limits us to 100 pushState calls :/
+      try {
+        globalHistory.pushState(historyState, '', url)
+      } catch (error) {
+        // They are going to lose state here, but there is no real
+        // way to warn them about it since the page will refresh...
         window.location.assign(url)
-      } else {
-        // try...catch because iOS limits us to 100 pushState calls :/
-        try {
-          globalHistory.pushState(historyState, '', url)
-        } catch (error) {
-          // They are going to lose state here, but there is no real
-          // way to warn them about it since the page will refresh...
-          window.location.assign(url)
-        }
       }
 
-      transit(nextAction, silent)
+      transit(nextAction)
     }
   }
 
   const replace = (
     to: To,
     state: State,
-    silent: boolean,
-    forceRefresh: boolean
   ) => {
     const nextAction = Action.REPLACE
     const nextLocation = getNextLocation(to, state)
     const retry = () => {
-      replace(to, state, silent, forceRefresh)
+      replace(to, state)
     }
 
-    if (allowTransit(nextAction, nextLocation, retry, silent)) {
+    if (allowTransit(nextAction, nextLocation, retry)) {
       const [historyState, url] = getHistoryStateAndUrl(nextLocation, index)
 
-      if (forceRefresh) {
-        window.location.replace(url)
-      } else {
-        globalHistory.replaceState(historyState, '', url)
-      }
+      globalHistory.replaceState(historyState, '', url)
 
-      transit(nextAction, silent)
+      transit(nextAction)
     }
   }
 
@@ -220,7 +198,7 @@ export default function createBrowserHistory({
     globalHistory.go(delta)
   }
 
-  return {
+  return readOnly({
     get length() {
       return globalHistory.length
     },
@@ -231,12 +209,8 @@ export default function createBrowserHistory({
       return location
     },
     createHref,
-    push: (to: To, state: State) => {
-      push(to, state, false, false)
-    },
-    replace: (to: To, state: State) => {
-      replace(to, state, false, false)
-    },
+    push,
+    replace,
     go,
     back: () => {
       go(-1)
@@ -261,22 +235,6 @@ export default function createBrowserHistory({
           window.removeEventListener(BeforeUnloadEventType, promptBeforeUnload)
         }
       }
-    },
-    forceRefresh: {
-      push: (to: To, state: State) => {
-        push(to, state, false, true)
-      },
-      replace: (to: To, state: State) => {
-        replace(to, state, false, true)
-      },
-    },
-    silent: {
-      push: (to: To, state: State) => {
-        push(to, state, true, false)
-      },
-      replace: (to: To, state: State) => {
-        replace(to, state, true, false)
-      },
-    },
-  }
+    }
+  })
 }

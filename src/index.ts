@@ -11,9 +11,9 @@ export enum Action {
 }
 
 // TYPES
-export type { BrowserHistory, BrowserHistoryOptions } from './browser'
-export type { HashHistory, HashHistoryOptions } from './hash'
-export type { MemoryHistory, MemoryHistoryOptions } from './memory'
+export type { BrowserHistoryOptions } from './browser'
+export type { HashHistoryOptions } from './hash'
+export type { MemoryHistory, MemoryHistoryOptions, InitialEntry } from './memory'
 
 export type Pathname = string
 
@@ -81,8 +81,4 @@ export interface History<S extends State = State> {
   forward(): void
   listen(listener: Listener<S>): Undo
   block(blocker: Blocker<S>): Undo
-  silent: {
-    push(to: To, state?: State): void
-    replace(to: To, state?: State): void
-  }
 }

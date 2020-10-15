@@ -156,7 +156,7 @@ export default function createMemoryHistory({
     }
   }
 
-  return {
+  return readOnly({
     get index() {
       return index
     },
@@ -170,12 +170,8 @@ export default function createMemoryHistory({
       return location
     },
     createHref,
-    push: (to: To, state: State) => {
-      push(to, state, false)
-    },
-    replace: (to: To, state: State) => {
-      replace(to, state, false)
-    },
+    push,
+    replace,
     go,
     back: () => {
       go(-1)
@@ -189,13 +185,5 @@ export default function createMemoryHistory({
     block: (blocker: Blocker<State>) => {
       return blockers.push(blocker)
     },
-    silent: {
-      push: (to: To, state: State) => {
-        push(to, state, true)
-      },
-      replace: (to: To, state: State) => {
-        replace(to, state, true)
-      },
-    },
-  }
+  })
 }
